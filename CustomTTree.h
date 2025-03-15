@@ -16,4 +16,23 @@ using ColumnVariant = variant<
     vector<string>
 >;
 
+class CustomTTree {
+    private:
+        map<string, ColumnVariant> columns;
+        size_t numEntries;
+
+    public>
+        CustomTTree() : numEntries(0) {}
+
+    template<typename T>
+    void AddColumn(const string& name) {
+        if (columns.find(name) != columns.end()) {
+            cerr<< "Column " << name << " already exists." << endl;
+            return;
+        }
+        columns[name] = vector<T>();
+    }
+
+}
+
 #endif // CUSTOM_TTREE_H
