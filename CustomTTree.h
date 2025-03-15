@@ -67,6 +67,30 @@ class CustomTTree {
         return numEntries;
     }
 
+    void PrintStructure() const {
+        cout << "===== Custom TTree Structure =====" << endl;
+        cout << "Number of entries> " << numEntries << endl;
+        cout << "Columns:" << endl;
+
+        for (const auto& pair : columns) {
+            cout << " " << pair.first << " (";
+            
+            visit([](const auto& column) {
+                using T = decay_t<decltype(column)>;
+                if constexpr (is_same_v<T, vector<int>>) cout << "int";
+                else if constexpr (is_same_v<T, vector<float>>) cout << "float";
+                else if constexpr (is_same_v<T, vector<double>>) cout << "double";
+                else if constexpr (is_same_v<T, vector<bool>>) cout << "bool";
+                else if constexpr (is_same_v<T, vector<string>>) cout << "string";
+                else cout << "unknown";
+            }, pair.second);
+            
+            cout << ")" << endl;
+        }
+
+        cout << "================================" << endl;
+    }
+
     void LoadFromROOT(const string& filename, const string& treename) {
         TFile file(filename.c_str(), "READ");
         if (!file.IsOpen()) {

@@ -6,7 +6,8 @@ using namespace std;
 int main() {
     
     CustomTTree tree;
-    tree.LoadFromROOT("prepared_data.root", "mytree");
-     
+    tree.LoadFromROOT("prepared_data.root", "TotemNtuple");
+    tree.PrintStructure();
+
     return 0;
 }
