@@ -18,6 +18,7 @@
             cmake
             gnumake 
             root 
+            arrow-cpp
           ];
 
           shellHook = ''
