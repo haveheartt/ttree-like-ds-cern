@@ -4,6 +4,9 @@
 using namespace std;
 
 int main() {
-    cout << "hello world" << endl;
+    
+    CustomTTree tree;
+    tree.LoadFromROOT("prepared_data.root", "mytree");
+     
     return 0;
 }

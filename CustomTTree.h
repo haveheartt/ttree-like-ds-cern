@@ -4,6 +4,7 @@
 #include <iostream>
 #include <variant>
 #include <string>
+#include <functional>
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
@@ -64,6 +65,88 @@ class CustomTTree {
 
     size_t GetNumEntries() {
         return numEntries;
+    }
+
+    void LoadFromROOT(const string& filename, const string& treename) {
+        TFile file(filename.c_str(), "READ");
+        if (!file.IsOpen()) {
+            cerr << "Error: Could not open file " << filename << endl;
+            return;
+        }
+
+        TTree* tree = (TTree*)file.Get(treename.c_str());
+        if (!tree) {
+            cerr << "Error: Could not retrieve TTree " << treename << " from file " << filename << endl;
+            file.Close();
+            return;
+        }
+
+        //preallocate memory because of the array awkwardness nature of ROOT files
+        for (auto& pair : columns) {
+            visit([tree](auto& column) { column.reserve(tree->GetEntries()); }, pair.second);
+        }
+
+        vector<pair<void*, function<void(void*)>>> branchData;
+
+        TObjArray* branches = tree->GetListOfBranches();
+        for (int i = 0; i < branches->GetEntries(); i++) {
+            TBranch* branch = (TBranch*)branches->At(i);
+            string name = branch->GetName();
+            string type = branch->GetClassName();
+
+            if (type.empty()) {
+                string title = branch->GetTitle();
+
+                if (title.find("/I") != string::npos) {
+                    AddColumn<int>(name);
+                    int* value = new int;
+                    tree->SetBranchAddress(name.c_str(), value);
+                    branchData.emplace_back(value, [this, name](void* val) {
+                        SetValue(name, *static_cast<int*>(val));
+                    });
+                } else if (title.find("/F") != string::npos) {
+                    AddColumn<float>(name);
+                    float* value = new float;
+                    tree->SetBranchAddress(name.c_str(), value);
+                    branchData.emplace_back(value, [this, name](void* val) {
+                        SetValue(name, *static_cast<float*>(val));
+                    });
+                } else if (title.find("/D") != string::npos) {
+                    AddColumn<double>(name);
+                    double* value = new double;
+                    tree->SetBranchAddress(name.c_str(), value);
+                    branchData.emplace_back(value, [this, name](void* val) {
+                        SetValue(name, *static_cast<double*>(val));
+                    });
+                } else if (title.find("/O") != string::npos) {
+                    AddColumn<bool>(name);
+                    bool* value = new bool;
+                    tree->SetBranchAddress(name.c_str(), value);
+                    branchData.emplace_back(value, [this, name](void* val){
+                        SetValue(name, *static_cast<bool*>(val));
+                    });
+                } else {
+                    cerr << "Warning: Unknow type for branch " << name << " (title: " << title << "), skipping" << endl; 
+                }
+            }
+        }
+
+        for (Long64_t j = 0; j < tree->GetEntries(); j++) {
+            tree->GetEntry(j);
+
+            for (auto& [value, setValue] : branchData) {
+                setValue(value);
+            }
+
+            Fill();
+        }
+
+        for (auto& [value, _] : branchData) {
+            delete static_cast<int*>(value);
+        }
+
+        file.Close();
+        cout << "Loaded " << numEntries << " entries from " << filename << endl;
     }
 
 };
