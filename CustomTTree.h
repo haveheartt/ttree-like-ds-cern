@@ -44,6 +44,10 @@ class CustomTTree {
         return get<vector<T>>(iterator->second);
     }
 
+    bool HasColumn(const string& name) const {
+        return columns.find(name) != columns.end();
+    }
+
 };
 
 #endif // CUSTOM_TTREE_H
