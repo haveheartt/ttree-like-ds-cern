@@ -1,4 +1,4 @@
-#include "CustomTTree.h" // Your custom data structure
+#include "CustomTTree.h"
 #include <iostream>
 
 using namespace std;
