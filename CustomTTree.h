@@ -48,6 +48,16 @@ class CustomTTree {
         return columns.find(name) != columns.end();
     }
 
+    template<typename T>
+        void SetValue(const string& name, const T& value) {
+            auto& column = GetColumn<T>(name);
+            if (column.size() == numEntries) {
+                column.push_back(value);
+            } else {
+                column[numEntries] = value;
+            }
+        }
+
 };
 
 #endif // CUSTOM_TTREE_H
