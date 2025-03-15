@@ -58,6 +58,10 @@ class CustomTTree {
             }
         }
 
+    void Fill() {
+        numEntries++;
+    }
+
 };
 
 #endif // CUSTOM_TTREE_H
