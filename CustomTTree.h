@@ -2,6 +2,8 @@
 #define CUSTOM_TTREE_H
 
 #include <iostream>
+#include <variant>
+#include <string>
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
@@ -21,7 +23,7 @@ class CustomTTree {
         map<string, ColumnVariant> columns;
         size_t numEntries;
 
-    public>
+    public:
         CustomTTree() : numEntries(0) {}
 
     template<typename T>
@@ -33,6 +35,6 @@ class CustomTTree {
         columns[name] = vector<T>();
     }
 
-}
+};
 
 #endif // CUSTOM_TTREE_H
