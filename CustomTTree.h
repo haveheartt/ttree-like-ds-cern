@@ -35,6 +35,15 @@ class CustomTTree {
         columns[name] = vector<T>();
     }
 
+    template<typename T>
+    vector<T>& GetColumn(const string& name) {
+        auto iterator = columns.find(name);
+        if (iterator == columns.end()) {
+            throw runtime_error("Column " + name + " not found");
+        }
+        return get<vector<T>>(iterator->second);
+    }
+
 };
 
 #endif // CUSTOM_TTREE_H
