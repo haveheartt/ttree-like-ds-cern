@@ -62,6 +62,10 @@ class CustomTTree {
         numEntries++;
     }
 
+    size_t GetNumEntries() {
+        return numEntries;
+    }
+
 };
 
 #endif // CUSTOM_TTREE_H
