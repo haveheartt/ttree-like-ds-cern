@@ -13,6 +13,7 @@ using namespace std;
 
 using ColumnVariant = variant<
     vector<int>,
+    vector<unsigned int>,
     vector<float>,
     vector<double>,
     vector<bool>,
@@ -78,6 +79,7 @@ class CustomTTree {
             visit([](const auto& column) {
                 using T = decay_t<decltype(column)>;
                 if constexpr (is_same_v<T, vector<int>>) cout << "int";
+                else if constexpr (is_same_v<T, vector<unsigned int>>) cout << "unsigned int";
                 else if constexpr (is_same_v<T, vector<float>>) cout << "float";
                 else if constexpr (is_same_v<T, vector<double>>) cout << "double";
                 else if constexpr (is_same_v<T, vector<bool>>) cout << "bool";
@@ -121,12 +123,19 @@ class CustomTTree {
             if (type.empty()) {
                 string title = branch->GetTitle();
 
-                if (title.find("/I") != string::npos) {
+                 if (title.find("/I") != string::npos) {
                     AddColumn<int>(name);
                     int* value = new int;
                     tree->SetBranchAddress(name.c_str(), value);
                     branchData.emplace_back(value, [this, name](void* val) {
                         SetValue(name, *static_cast<int*>(val));
+                    });
+                } else if (title.find("/i") != string::npos) {
+                    AddColumn<unsigned int>(name);
+                    unsigned int* value = new unsigned int;
+                    tree->SetBranchAddress(name.c_str(), value);
+                    branchData.emplace_back(value, [this, name](void* val) {
+                        SetValue(name, *static_cast<unsigned int*>(val));
                     });
                 } else if (title.find("/F") != string::npos) {
                     AddColumn<float>(name);
@@ -146,11 +155,11 @@ class CustomTTree {
                     AddColumn<bool>(name);
                     bool* value = new bool;
                     tree->SetBranchAddress(name.c_str(), value);
-                    branchData.emplace_back(value, [this, name](void* val){
+                    branchData.emplace_back(value, [this, name](void* val) {
                         SetValue(name, *static_cast<bool*>(val));
-                    });
+                    }); 
                 } else {
-                    cerr << "Warning: Unknow type for branch " << name << " (title: " << title << "), skipping" << endl; 
+                    cerr << "Warning: Unknown type for branch " << name << " (title: " << title << "), skipping" << endl;
                 }
             }
         }
