@@ -4,3 +4,4 @@ MasterclassData.root
 main
 main.o
 CustomTTree.o
+hep_data.arrow

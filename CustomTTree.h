@@ -8,6 +8,8 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TBranch.h>
+#include <arrow/api.h>
+#include <arrow/io/file.h>
 
 using namespace std;
 
@@ -46,6 +48,8 @@ public:
     void PrintStructure() const;
 
     void LoadFromROOT(const string& filename, const string& treename);
+    
+    arrow::Status SaveToArrow(const string& filename);
 };
 
 #endif // CUSTOM_TTREE_H

@@ -1,4 +1,8 @@
 #include "CustomTTree.h"
+#include <arrow/api.h>
+#include <arrow/io/file.h>
+#include <arrow/ipc/api.h>
+#include <arrow/ipc/feather.h>  // Use Feather format for compatibility
 
 CustomTTree::CustomTTree() : numEntries(0) {}
 
@@ -156,3 +160,67 @@ void CustomTTree::LoadFromROOT(const string& filename, const string& treename) {
     cout << "Loaded " << numEntries << " entries from " << filename << endl;
 }
 
+arrow::Status CustomTTree::SaveToArrow(const std::string& filename) {
+    arrow::MemoryPool* pool = arrow::default_memory_pool();
+    vector<shared_ptr<arrow::Array>> arrowArrays;
+    vector<shared_ptr<arrow::Field>> schemaFields;
+
+    for (const auto& pair : columns) {
+        const string& name = pair.first;
+
+        arrow::Status status = visit([&](const auto& column) -> arrow::Status {
+            using T = decay_t<decltype(column)>;
+            shared_ptr<arrow::Array> arrowArray;
+            shared_ptr<arrow::DataType> arrowType;
+
+            if constexpr (is_same_v<T, vector<int>>) {
+                arrow::Int32Builder builder;
+                ARROW_RETURN_NOT_OK(builder.AppendValues(column));
+                ARROW_RETURN_NOT_OK(builder.Finish(&arrowArray));
+                arrowType = arrow::int32();
+            } else if constexpr (is_same_v<T, vector<unsigned int>>) {
+                arrow::UInt32Builder builder;
+                ARROW_RETURN_NOT_OK(builder.AppendValues(column));
+                ARROW_RETURN_NOT_OK(builder.Finish(&arrowArray));
+                arrowType = arrow::uint32();
+            } else if constexpr (is_same_v<T, vector<float>>) {
+                arrow::FloatBuilder builder;
+                ARROW_RETURN_NOT_OK(builder.AppendValues(column));
+                ARROW_RETURN_NOT_OK(builder.Finish(&arrowArray));
+                arrowType = arrow::float32();
+            } else if constexpr (is_same_v<T, vector<double>>) {
+                arrow::DoubleBuilder builder;
+                ARROW_RETURN_NOT_OK(builder.AppendValues(column));
+                ARROW_RETURN_NOT_OK(builder.Finish(&arrowArray));
+                arrowType = arrow::float64();
+            } else if constexpr (is_same_v<T, vector<bool>>) {
+                arrow::BooleanBuilder builder;
+                ARROW_RETURN_NOT_OK(builder.AppendValues(column));
+                ARROW_RETURN_NOT_OK(builder.Finish(&arrowArray));
+                arrowType = arrow::boolean();
+            } else {
+                cerr << "Skipping column " << name << " (unsupported type for Arrow)" << endl;
+                return arrow::Status::OK();
+            }
+
+            schemaFields.push_back(arrow::field(name, arrowType));
+            arrowArrays.push_back(arrowArray);
+            return arrow::Status::OK();
+        }, pair.second);
+
+        if (!status.ok()) {
+            return status;
+        }
+    }
+
+    shared_ptr<arrow::Schema> schema = arrow::schema(schemaFields);
+    shared_ptr<arrow::Table> table = arrow::Table::Make(schema, arrowArrays);
+
+    ARROW_ASSIGN_OR_RAISE(auto outfile, arrow::io::FileOutputStream::Open(filename));
+
+    ARROW_RETURN_NOT_OK(arrow::ipc::feather::WriteTable(*table, outfile.get()));
+
+    std::cout << "Successfully saved data to " << filename << std::endl;
+
+    return arrow::Status::OK();
+}
