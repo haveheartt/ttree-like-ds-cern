@@ -1,6 +1,5 @@
-prepared_data.root
-AliESDs.root
-MasterclassData.root
+/data
+/results
 main
 main.o
 CustomTTree.o

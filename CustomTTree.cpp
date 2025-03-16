@@ -220,7 +220,5 @@ arrow::Status CustomTTree::SaveToArrow(const std::string& filename) {
 
     ARROW_RETURN_NOT_OK(arrow::ipc::feather::WriteTable(*table, outfile.get()));
 
-    std::cout << "Successfully saved data to " << filename << std::endl;
-
     return arrow::Status::OK();
 }

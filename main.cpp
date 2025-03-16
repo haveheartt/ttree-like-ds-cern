@@ -6,9 +6,9 @@ using namespace std;
 int main() {
     
     CustomTTree tree;
-    tree.LoadFromROOT("prepared_data.root", "TotemNtuple");
-//    tree.PrintStructure();
-    arrow::Status status = tree.SaveToArrow("hep_data.arrow");
+    tree.LoadFromROOT("data/prepared_data.root", "TotemNtuple");
+    tree.PrintStructure();
+    arrow::Status status = tree.SaveToArrow("data/hep_data.arrow");
     if (!status.ok()) {
         std::cerr << "Error saving to Arrow: " << status.ToString() << std::endl;
     } else {
